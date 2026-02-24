@@ -1,51 +1,64 @@
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 
 const app = express();
 app.use(express.json());
-app.use(cors());
 
-// 🔴 Yaha apna MongoDB Atlas connection string paste karna
-mongoose.connect("PASTE_YOUR_MONGODB_CONNECTION_STRING")
-.then(() => console.log("Database Connected"))
-.catch(err => console.log(err));
+// ================= DATABASE CONNECT =================
+mongoose.connect(process.env.MONGO_URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+})
+.then(() => console.log("MongoDB Connected ✅"))
+.catch((err) => console.log("MongoDB Connection Error:", err));
 
+// ================= SCHEMA =================
 const userSchema = new mongoose.Schema({
-    name: String,
-    mobile: String,
-    address: String,
-    dob: String,
-    idNumber: String
+  name: String,
+  mobile: String,
+  address: String,
+  dob: String,
+  idNumber: String
 });
 
 const User = mongoose.model("User", userSchema);
 
+// ================= HOME ROUTE =================
 app.get("/", (req, res) => {
-    res.send("Backend Running Successfully 🚀");
+  res.send("Backend Running Successfully ✅");
 });
 
-app.post("/search", async (req, res) => {
-    const { type, value } = req.body;
+// ================= SEARCH ROUTE =================
+app.get("/search", async (req, res) => {
+  try {
+    const query = req.query.q;
 
-    let result;
-    if (type === "mobile") {
-        result = await User.findOne({ mobile: value });
-    } else {
-        result = await User.findOne({ name: value });
+    if (!query) {
+      return res.json({ message: "Please provide search query ?q= " });
     }
 
-    if (result) {
-        res.json({ found: true, data: result });
-    } else {
-        res.json({ found: false });
+    const user = await User.findOne({
+      $or: [
+        { name: query },
+        { mobile: query },
+        { idNumber: query }
+      ]
+    });
+
+    if (!user) {
+      return res.json({ message: "No data found ❌" });
     }
+
+    res.json(user);
+
+  } catch (error) {
+    res.status(500).json({ error: "Server Error" });
+  }
 });
 
-app.post("/add", async (req, res) => {
-    const user = new User(req.body);
-    await user.save();
-    res.json({ message: "Data Added" });
-});
+// ================= SERVER START =================
+const PORT = process.env.PORT || 3000;
 
-app.listen(3000, () => console.log("Server running on port 3000"));
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
