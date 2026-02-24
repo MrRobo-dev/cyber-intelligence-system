@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Cyber Intelligence System</title>
+
+<style>
+body{
+    margin:0;
+    background:black;
+    font-family:'Courier New',monospace;
+    color:#00ffcc;
+    overflow:hidden;
+}
+
+/* Matrix */
+canvas{
+    position:fixed;
+    top:0;
+    left:0;
+    z-index:-1;
+}
+
+/* Container */
+.container{
+    width:90%;
+    max-width:900px;
+    margin:60px auto;
+    padding:30px;
+    background:rgba(0,0,0,0.75);
+    border:1px solid #00ffcc;
+    border-radius:15px;
+    box-shadow:0 0 30px #00ffcc;
+    backdrop-filter:blur(10px);
+}
+
+h1{
+    text-align:center;
+    letter-spacing:4px;
+    text-shadow:0 0 20px #00ffcc;
+}
+
+/* Toggle Buttons */
+.toggle-container{
+    display:inline-flex;
+    border:1px solid #00ffcc;
+    border-radius:30px;
+    overflow:hidden;
+    margin-bottom:15px;
+}
+
+.toggle-btn{
+    padding:10px 25px;
+    background:black;
+    border:none;
+    color:#00ffcc;
+    cursor:pointer;
+    font-size:15px;
+    transition:all 0.4s ease;
+}
+
+.toggle-btn.active{
+    background:#00ffcc;
+    color:black;
+    box-shadow:0 0 15px #00ffcc inset;
+}
+
+.search-section{
+    text-align:center;
+    margin-top:30px;
+}
+
+input{
+    padding:12px;
+    margin:10px;
+    width:250px;
+    background:black;
+    border:1px solid #00ffcc;
+    color:#00ffcc;
+    font-size:16px;
+    border-radius:6px;
+    outline:none;
+}
+
+button.scan-btn{
+    padding:12px 20px;
+    background:black;
+    border:1px solid #00ffcc;
+    color:#00ffcc;
+    cursor:pointer;
+    border-radius:6px;
+    transition:0.3s;
+}
+
+button.scan-btn:hover{
+    background:#00ffcc;
+    color:black;
+    box-shadow:0 0 20px #00ffcc;
+}
+
+button.scan-btn:disabled{
+    opacity:0.5;
+    cursor:not-allowed;
+}
+
+/* Progress */
+.progress-bar{
+    width:100%;
+    height:15px;
+    background:#002222;
+    margin-top:25px;
+    display:none;
+    border-radius:10px;
+    overflow:hidden;
+}
+
+.progress{
+    height:100%;
+    width:0%;
+    background:#00ffcc;
+    border-radius:10px;
+}
+
+/* Terminal */
+.terminal{
+    margin-top:30px;
+    padding:20px;
+    background:rgba(0,0,0,0.9);
+    border-radius:10px;
+    border:1px solid #00ffcc;
+    min-height:200px;
+    font-size:16px;
+    line-height:1.6;
+    box-shadow:inset 0 0 20px #00ffcc;
+    overflow-y:auto;
+}
+
+/* Watermark */
+.watermark{
+    position:fixed;
+    bottom:20px;
+    right:25px;
+    font-size:14px;
+    letter-spacing:2px;
+    color:#00ffcc;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="matrix"></canvas>
+
+<div class="container">
+<h1>CYBER INTELLIGENCE SYSTEM</h1>
+
+<div class="search-section">
+
+<div class="toggle-container">
+<button class="toggle-btn active" id="mobileBtn">Mobile</button>
+<button class="toggle-btn" id="nameBtn">Name</button>
+</div>
+
+<br>
+
+<input type="text" id="searchInput" placeholder="Enter 10 Digit Mobile" maxlength="10">
+
+<br>
+
+<button class="scan-btn" id="scanBtn">Initiate Scan</button>
+
+</div>
+
+<div class="progress-bar" id="progressBar">
+<div class="progress" id="progress"></div>
+</div>
+
+<div class="terminal" id="terminal"></div>
+
+</div>
+
+<div class="watermark">Created by @anishahmad</div>
+
+<script>
+
+/* MATRIX */
+const canvas=document.getElementById("matrix");
+const ctx=canvas.getContext("2d");
+
+function resizeCanvas(){
+canvas.height=window.innerHeight;
+canvas.width=window.innerWidth;
+}
+resizeCanvas();
+window.addEventListener("resize",resizeCanvas);
+
+const letters="01ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+const fontSize=14;
+let columns=Math.floor(canvas.width/fontSize);
+let drops=Array(columns).fill(1);
+
+function draw(){
+ctx.fillStyle="rgba(0,0,0,0.05)";
+ctx.fillRect(0,0,canvas.width,canvas.height);
+ctx.fillStyle="#00ffcc";
+ctx.font=fontSize+"px monospace";
+
+for(let i=0;i<drops.length;i++){
+const text=letters[Math.floor(Math.random()*letters.length)];
+ctx.fillText(text,i*fontSize,drops[i]*fontSize);
+
+if(drops[i]*fontSize>canvas.height && Math.random()>0.975)
+drops[i]=0;
+
+drops[i]++;
+}
+}
+setInterval(draw,33);
+
+/* TOGGLE */
+let searchType="mobile";
+const mobileBtn=document.getElementById("mobileBtn");
+const nameBtn=document.getElementById("nameBtn");
+const input=document.getElementById("searchInput");
+const scanBtn=document.getElementById("scanBtn");
+
+function switchMode(type){
+searchType=type;
+
+mobileBtn.classList.remove("active");
+nameBtn.classList.remove("active");
+
+if(type==="mobile"){
+mobileBtn.classList.add("active");
+input.placeholder="Enter 10 Digit Mobile";
+input.maxLength=10;
+}else{
+nameBtn.classList.add("active");
+input.placeholder="Enter Full Name";
+input.removeAttribute("maxLength");
+}
+
+input.value="";
+}
+
+mobileBtn.onclick=()=>switchMode("mobile");
+nameBtn.onclick=()=>switchMode("name");
+
+/* INPUT FILTER */
+input.addEventListener("input",function(){
+if(searchType==="mobile"){
+this.value=this.value.replace(/[^0-9]/g,'');
+}else{
+this.value=this.value.replace(/[^A-Za-z ]/g,'');
+}
+});
+
+/* ENTER KEY SUPPORT */
+input.addEventListener("keypress",function(e){
+if(e.key==="Enter"){
+startScan();
+}
+});
+
+let scanInterval=null;
+
+/* SCAN FUNCTION */
+function startScan(){
+
+const terminal=document.getElementById("terminal");
+const progressBar=document.getElementById("progressBar");
+const progress=document.getElementById("progress");
+const value=input.value.trim();
+
+terminal.innerHTML="";
+
+if(scanInterval){
+clearInterval(scanInterval);
+scanInterval=null;
+}
+
+/* Validation */
+if(searchType==="mobile"){
+if(!/^\d{10}$/.test(value)){
+terminal.innerHTML="<span style='color:red;'>ERROR: Enter EXACTLY 10 digit mobile number.</span>";
+return;
+}
+}else{
+if(!/^[A-Za-z ]{3,}$/.test(value)){
+terminal.innerHTML="<span style='color:red;'>ERROR: Enter valid name (Minimum 3 letters).</span>";
+return;
+}
+}
+
+scanBtn.disabled=true;
+
+/* Reset Progress */
+progressBar.style.display="block";
+progress.style.width="0%";
+
+let width=0;
+
+scanInterval=setInterval(()=>{
+if(width>=100){
+clearInterval(scanInterval);
+scanInterval=null;
+
+setTimeout(()=>{
+showData(value);
+progressBar.style.display="none";
+scanBtn.disabled=false;
+},300);
+
+}else{
+width++;
+progress.style.width=width+"%";
+}
+},15);
+}
+
+scanBtn.onclick=startScan;
+
+/* FAKE DATA */
+function randomItem(arr){
+return arr[Math.floor(Math.random()*arr.length)];
+}
+
+function generateID(){
+let id="";
+for(let i=0;i<12;i++){
+id+=Math.floor(Math.random()*10);
+}
+return id;
+}
+
+function showData(value){
+const terminal=document.getElementById("terminal");
+
+const names=["Rahul Sharma","Priya Singh","Amit Verma","Sneha Patel","Arjun Kumar"];
+const cities=["Delhi","Mumbai","Lucknow","Jaipur","Pune"];
+const streets=["MG Road","Park Street","Nehru Nagar","Raj Colony","Green Avenue"];
+
+const lines=[
+"Connection Established...",
+"Fetching Records...",
+"",
+"Query: "+value,
+"Name: "+randomItem(names),
+"Address: "+randomItem(streets)+", "+randomItem(cities)+", India",
+"Date of Birth: "+(Math.floor(Math.random()*28+1))+"/"+
+(Math.floor(Math.random()*12+1))+"/"+
+(1990+Math.floor(Math.random()*15)),
+"ID Number: "+generateID(),
+"",
+"Scan Completed Successfully."
+];
+
+let i=0;
+function printLine(){
+if(i<lines.length){
+terminal.innerHTML+=lines[i]+"<br>";
+terminal.scrollTop=terminal.scrollHeight;
+i++;
+setTimeout(printLine,300);
+}
+}
+printLine();
+}
+
+</script>
+
+</body>
+</html>
